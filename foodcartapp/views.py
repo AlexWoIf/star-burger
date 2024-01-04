@@ -3,7 +3,7 @@ import json
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
-
+from rest_framework.decorators import api_view
 from .models import Product, Order, OrderItem
 
 
@@ -58,10 +58,10 @@ def product_list_api(request):
         'indent': 4,
     })
 
-
+@api_view(['POST',])
 def register_order(request):
     try:
-        order_payload = json.loads(request.body.decode())
+        order_payload = request.data
     except ValueError:
         return JsonResponse({
             'error': 'Wrong request data',
@@ -80,4 +80,4 @@ def register_order(request):
             product=get_object_or_404(Product,  pk=product.get('product'), ),
             quantity=product.get('quantity')
         )
-    return JsonResponse(order)
+    return JsonResponse(order_payload, safe=False, )
