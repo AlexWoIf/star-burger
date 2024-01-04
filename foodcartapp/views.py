@@ -1,10 +1,25 @@
-import json
-
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
+from pydantic import BaseModel, ValidationError, conlist
+from rest_framework import status
 from rest_framework.decorators import api_view
-from .models import Product, Order, OrderItem
+from rest_framework.response import Response
+
+from .models import Order, OrderItem, Product
+
+
+class ItemSchema(BaseModel):
+    product: int
+    quantity: int
+
+
+class OrderSchema(BaseModel):
+    firstname: str
+    lastname: str
+    phonenumber: str
+    address: str
+    products: conlist(ItemSchema, min_length=1)
 
 
 def banners_list_api(request):
@@ -61,23 +76,22 @@ def product_list_api(request):
 @api_view(['POST',])
 def register_order(request):
     try:
-        order_payload = request.data
-    except ValueError:
-        return JsonResponse({
-            'error': 'Wrong request data',
-        })
-    print(json.dumps(order_payload, indent=4))
+        print(request.data)
+        order_payload = OrderSchema(**request.data)
+    except ValidationError as error:
+        return Response({'error': str(error), },
+                        status=status.HTTP_406_NOT_ACCEPTABLE )
     order = Order.objects.create(
-        firstname=order_payload.get('firstname'),
-        lastname=order_payload.get('lastname'),
-        phonenumber=order_payload.get('phonenumber'),
-        address=order_payload.get('address')
+        firstname=order_payload.firstname,
+        lastname=order_payload.lastname,
+        phonenumber=order_payload.phonenumber,
+        address=order_payload.address
     )
-    products = order_payload.get('products')
+    products = order_payload.products
     for product in products:
         OrderItem.objects.create(
             order=order,
-            product=get_object_or_404(Product,  pk=product.get('product'), ),
-            quantity=product.get('quantity')
+            product=get_object_or_404(Product,  pk=product.product, ),
+            quantity=product.quantity
         )
-    return JsonResponse(order_payload, safe=False, )
+    return JsonResponse({'status': 200}, safe=False, )

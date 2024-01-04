@@ -6,3 +6,4 @@ django-phonenumber-field[phonenumberslite]==7.3.*
 djangorestframework==3.14.*
 markdown==3.5.*
 django-filter==23.5
+pydantic==2.5.*
