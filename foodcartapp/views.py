@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
 from pydantic import BaseModel, ValidationError, conlist
+from pydantic_extra_types.phone_numbers import PhoneNumber
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -17,7 +18,7 @@ class ItemSchema(BaseModel):
 class OrderSchema(BaseModel):
     firstname: str
     lastname: str
-    phonenumber: str
+    phonenumber: PhoneNumber
     address: str
     products: conlist(ItemSchema, min_length=1)
 
