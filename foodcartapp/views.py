@@ -73,6 +73,7 @@ def product_list_api(request):
         'indent': 4,
     })
 
+
 @api_view(['POST',])
 def register_order(request):
     try:
@@ -80,7 +81,7 @@ def register_order(request):
         order_payload = OrderSchema(**request.data)
     except ValidationError as error:
         return Response({'error': str(error), },
-                        status=status.HTTP_406_NOT_ACCEPTABLE )
+                        status=status.HTTP_406_NOT_ACCEPTABLE, )
     order = Order.objects.create(
         firstname=order_payload.firstname,
         lastname=order_payload.lastname,
@@ -94,4 +95,4 @@ def register_order(request):
             product=get_object_or_404(Product,  pk=product.product, ),
             quantity=product.quantity
         )
-    return JsonResponse({'status': 200}, safe=False, )
+    return Response({'status': 'ok'}, status=status.HTTP_201_CREATED, )
