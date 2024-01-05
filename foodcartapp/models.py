@@ -128,8 +128,7 @@ class Order(models.Model):
     firstname = models.CharField('Имя', blank=True, max_length=200, )
     lastname = models.CharField('Фамилия', blank=True, max_length=200, )
     phonenumber = PhoneNumberField(
-                        'Номер владельца',
-                        blank=True,
+                        'Телефон заказчика ',
                         db_index=True,
                     )
     address = models.CharField('Адрес доставки', max_length=200, )
@@ -144,7 +143,7 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, verbose_name='Заказ',
-                              related_name='items',
+                              related_name='products',
                               on_delete=models.CASCADE)
     product = models.ForeignKey(Product, verbose_name='Продукт',
                                 related_name='ordered',

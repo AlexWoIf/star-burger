@@ -1,26 +1,30 @@
+import json
+
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
-from pydantic import BaseModel, ValidationError, conlist
-from pydantic_extra_types.phone_numbers import PhoneNumber
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.serializers import ModelSerializer
 
 from .models import Order, OrderItem, Product
 
 
-class ItemSchema(BaseModel):
-    product: int
-    quantity: int
+class OrderItemSerializer(ModelSerializer):
+
+    class Meta:
+        model = OrderItem
+        fields = ['product', 'quantity', ]
 
 
-class OrderSchema(BaseModel):
-    firstname: str
-    lastname: str
-    phonenumber: PhoneNumber
-    address: str
-    products: conlist(ItemSchema, min_length=1)
+class OrderSerializer(ModelSerializer):
+    products = OrderItemSerializer(many=True, allow_empty=False, )
+
+    class Meta:
+        model = Order
+        fields = ['firstname', 'lastname', 'phonenumber',
+                  'address', 'products']
 
 
 def banners_list_api(request):
@@ -77,23 +81,24 @@ def product_list_api(request):
 
 @api_view(['POST',])
 def register_order(request):
-    try:
-        print(request.data)
-        order_payload = OrderSchema(**request.data)
-    except ValidationError as error:
-        return Response({'error': str(error), },
-                        status=status.HTTP_406_NOT_ACCEPTABLE, )
+    print(request.data)
+    serialized_order = OrderSerializer(data=request.data)
+    serialized_order.is_valid(raise_exception=True)
+
     order = Order.objects.create(
-        firstname=order_payload.firstname,
-        lastname=order_payload.lastname,
-        phonenumber=order_payload.phonenumber,
-        address=order_payload.address
+        firstname=serialized_order.validated_data['firstname'],
+        lastname=serialized_order.validated_data['lastname'],
+        phonenumber=serialized_order.validated_data['phonenumber'],
+        address=serialized_order.validated_data['address']
     )
-    products = order_payload.products
-    for product in products:
-        OrderItem.objects.create(
-            order=order,
-            product=get_object_or_404(Product,  pk=product.product, ),
-            quantity=product.quantity
-        )
-    return Response({'status': 'ok'}, status=status.HTTP_201_CREATED, )
+    order_items = serialized_order.validated_data['products']
+    print(order_items)
+    products = [OrderItem(
+                    order=order,
+                    product=item['product'],
+                    quantity=item['quantity'],
+                ) for item in order_items]
+    OrderItem.objects.bulk_create(products)
+    return Response({'status': 'ok',
+                     'order_id': order.pk, },
+                    status=status.HTTP_201_CREATED, )
