@@ -12,7 +12,7 @@ from .models import Order, OrderItem, Product
 
 
 class OrderItemSerializer(ModelSerializer):
-
+    
     class Meta:
         model = OrderItem
         fields = ['product', 'quantity', ]
@@ -23,8 +23,8 @@ class OrderSerializer(ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['firstname', 'lastname', 'phonenumber',
-                  'address', 'products']
+        fields = ['id', 'firstname', 'lastname', 'phonenumber',
+                  'address', 'products', ]
 
 
 def banners_list_api(request):
@@ -81,7 +81,6 @@ def product_list_api(request):
 
 @api_view(['POST',])
 def register_order(request):
-    print(request.data)
     serialized_order = OrderSerializer(data=request.data)
     serialized_order.is_valid(raise_exception=True)
 
@@ -92,13 +91,13 @@ def register_order(request):
         address=serialized_order.validated_data['address']
     )
     order_items = serialized_order.validated_data['products']
-    print(order_items)
     products = [OrderItem(
                     order=order,
                     product=item['product'],
                     quantity=item['quantity'],
                 ) for item in order_items]
     OrderItem.objects.bulk_create(products)
+    serialized_order = OrderSerializer(order)
     return Response({'status': 'ok',
-                     'order_id': order.pk, },
+                     'order': serialized_order.data, },
                     status=status.HTTP_201_CREATED, )
