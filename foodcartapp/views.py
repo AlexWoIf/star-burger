@@ -1,30 +1,10 @@
-import json
-
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.serializers import ModelSerializer
 
-from .models import Order, OrderItem, Product
-
-
-class OrderItemSerializer(ModelSerializer):
-    
-    class Meta:
-        model = OrderItem
-        fields = ['product', 'quantity', ]
-
-
-class OrderSerializer(ModelSerializer):
-    products = OrderItemSerializer(many=True, allow_empty=False, )
-
-    class Meta:
-        model = Order
-        fields = ['id', 'firstname', 'lastname', 'phonenumber',
-                  'address', 'products', ]
+from .models import Order, OrderItem, Product, OrderSerializer
 
 
 def banners_list_api(request):

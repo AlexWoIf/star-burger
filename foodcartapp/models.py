@@ -1,6 +1,7 @@
-from django.db import models
 from django.core.validators import MinValueValidator
+from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
+from rest_framework.serializers import ModelSerializer
 
 
 class Restaurant(models.Model):
@@ -152,3 +153,19 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.quantity}"
+
+
+class OrderItemSerializer(ModelSerializer):
+
+    class Meta:
+        model = OrderItem
+        fields = ['product', 'quantity', ]
+
+
+class OrderSerializer(ModelSerializer):
+    products = OrderItemSerializer(many=True, allow_empty=False, )
+
+    class Meta:
+        model = Order
+        fields = ['id', 'firstname', 'lastname', 'phonenumber',
+                  'address', 'products', ]
