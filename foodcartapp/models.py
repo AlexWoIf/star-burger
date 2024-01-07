@@ -1,7 +1,14 @@
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import Count, Sum, F
 from phonenumber_field.modelfields import PhoneNumberField
 from rest_framework.serializers import ModelSerializer
+
+
+class OrderQuerySet(models.QuerySet):
+    def fetch_with_total(self):
+        fetch_with_total = self.annotate(total=Sum(F('products__quantity')*F('products__product__price')))
+        return fetch_with_total
 
 
 class Restaurant(models.Model):
@@ -133,6 +140,7 @@ class Order(models.Model):
                         db_index=True,
                     )
     address = models.CharField('Адрес доставки', max_length=200, )
+    objects = OrderQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'заказ'
@@ -167,5 +175,6 @@ class OrderSerializer(ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['id', 'firstname', 'lastname', 'phonenumber',
-                  'address', 'products', ]
+        #fields = ['id', 'firstname', 'lastname', 'phonenumber',
+        #          'address', 'products', ]
+        fields = '__all__'
