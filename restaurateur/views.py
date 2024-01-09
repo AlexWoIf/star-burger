@@ -95,5 +95,5 @@ def view_restaurants(request):
 def view_orders(request):
     orders = Order.objects.prefetch_related('products').fetch_with_total()
     context = {'order_items':
-               [OrderSerializer(order).data|{'total':order.total} for order in orders]}
+               [OrderSerializer(order).data for order in orders]}
     return render(request, template_name='order_items.html', context=context)

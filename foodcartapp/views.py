@@ -75,8 +75,10 @@ def register_order(request):
                     order=order,
                     product=item['product'],
                     quantity=item['quantity'],
+                    price=item['product'].price*item['quantity'],
                 ) for item in order_items]
     OrderItem.objects.bulk_create(products)
+    order.total = sum([product.price for product in products])
     serialized_order = OrderSerializer(order)
     return Response({'status': 'ok',
                      'order': serialized_order.data, },

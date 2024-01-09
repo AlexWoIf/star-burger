@@ -3,11 +3,12 @@ from django.db import models
 from django.db.models import Count, Sum, F
 from phonenumber_field.modelfields import PhoneNumberField
 from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 
 
 class OrderQuerySet(models.QuerySet):
     def fetch_with_total(self):
-        fetch_with_total = self.annotate(total=Sum(F('products__quantity')*F('products__product__price')))
+        fetch_with_total = self.annotate(total=Sum('products__price'))
         return fetch_with_total
 
 
@@ -147,7 +148,7 @@ class Order(models.Model):
         verbose_name_plural = 'заказы'
 
     def __str__(self):
-        return f"{self.firstname} {self.lastname} - {self.address}"
+        return f"{self.firstname} {self.lastname} - {self.phonenumber} - {self.address}"
 
 
 class OrderItem(models.Model):
@@ -158,23 +159,30 @@ class OrderItem(models.Model):
                                 related_name='ordered',
                                 on_delete=models.CASCADE)
     quantity = models.IntegerField('Количество', )
+    price = models.DecimalField(
+        'цена',
+        max_digits=8,
+        decimal_places=2,
+        default = 0,
+        validators=[MinValueValidator(0)],
+    )
 
     def __str__(self):
         return f"{self.product.name} - {self.quantity}"
-
+    
 
 class OrderItemSerializer(ModelSerializer):
 
     class Meta:
         model = OrderItem
-        fields = ['product', 'quantity', ]
+        fields = ['product', 'quantity', 'price', ]
 
 
 class OrderSerializer(ModelSerializer):
     products = OrderItemSerializer(many=True, allow_empty=False, )
+    total = serializers.DecimalField(max_digits=8, decimal_places=2, default=0, )
 
     class Meta:
         model = Order
-        #fields = ['id', 'firstname', 'lastname', 'phonenumber',
-        #          'address', 'products', ]
-        fields = '__all__'
+        fields = ['id', 'firstname', 'lastname', 'phonenumber',
+                  'address', 'products', 'total', ]
