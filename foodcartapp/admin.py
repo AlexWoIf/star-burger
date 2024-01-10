@@ -1,7 +1,9 @@
 from django.contrib import admin
-from django.shortcuts import reverse
+from django.forms import ModelForm
+from django.shortcuts import reverse, redirect
 from django.templatetags.static import static
 from django.utils.html import format_html
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from .models import Order, OrderItem, Product, Restaurant, RestaurantMenuItem
 
@@ -111,3 +113,12 @@ class ProductAdmin(admin.ModelAdmin):
 class OrderAdmin(admin.ModelAdmin):
     list_display = ['firstname', 'lastname', 'phonenumber', 'address']
     inlines = [OrderItemInline]
+    form = ModelForm
+
+    def response_change(self, request, obj):
+        response = super().response_post_save_change(request, obj)
+        if "next" in request.GET and url_has_allowed_host_and_scheme(
+                                                request.GET['next'], None):
+            return redirect(request.GET['next'])
+        else:
+            return response
