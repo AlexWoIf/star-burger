@@ -1,6 +1,7 @@
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum
+from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
@@ -141,6 +142,11 @@ class Order(models.Model):
         ('D', 'Delivering'),
         ('F', 'Finished'),
     ]
+    PAYMENT_CHOICES = [
+        ('D', 'Наличными при доставке'),
+        ('B', 'Накопленными бонусами/скидками'),
+        ('O', 'Картой онлайн'),
+    ]
     firstname = models.CharField('Имя', blank=True, max_length=200, default='')
     lastname = models.CharField('Фамилия', blank=True, max_length=200,
                                 default='')
@@ -149,7 +155,17 @@ class Order(models.Model):
     address = models.CharField('Адрес доставки', max_length=200, )
     status = models.CharField('статус', max_length=2, choices=STATUS_CHOICES,
                               default='N', db_index=True, )
+    payment = models.CharField('Способ оплаты', max_length=2,
+                               choices=PAYMENT_CHOICES, blank=True,
+                               db_index=True, )
     comment = models.TextField('комментарий', blank=True, default='')
+    created_at = models.DateTimeField('Время создания', default=timezone.now,
+                                      db_index=True, )
+    called_at = models.DateTimeField('Время звонка', null=True, blank=True,
+                                     db_index=True, )
+    delivered_at = models.DateTimeField('Время доставки', null=True,
+                                        blank=True, db_index=True, )
+
     objects = OrderQuerySet.as_manager()
 
     class Meta:
@@ -194,8 +210,10 @@ class OrderSerializer(ModelSerializer):
                                 decimal_places=2,
                                 default=0, )
     status_display = serializers.CharField(source='get_status_display')
+    payment_display = serializers.CharField(source='get_payment_display')
 
     class Meta:
         model = Order
         fields = ['id', 'status_display', 'firstname', 'lastname',
-                  'phonenumber', 'address', 'products', 'total', 'comment', ]
+                  'phonenumber', 'address', 'products', 'total', 'comment',
+                  'payment_display', ]
