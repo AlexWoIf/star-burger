@@ -1,6 +1,6 @@
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Count, Sum, F
+from django.db.models import Sum
 from phonenumber_field.modelfields import PhoneNumberField
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
@@ -134,6 +134,13 @@ class RestaurantMenuItem(models.Model):
 
 
 class Order(models.Model):
+    STATUS_CHOICES = [
+        ('N', 'New'),
+        ('C', 'Check data'),
+        ('M', 'Cook and pack'),
+        ('D', 'Delivering'),
+        ('F', 'Finished'),
+    ]
     firstname = models.CharField('Имя', blank=True, max_length=200, )
     lastname = models.CharField('Фамилия', blank=True, max_length=200, )
     phonenumber = PhoneNumberField(
@@ -142,6 +149,13 @@ class Order(models.Model):
                     )
     address = models.CharField('Адрес доставки', max_length=200, )
     objects = OrderQuerySet.as_manager()
+    status = models.CharField(
+        'статус',
+        max_length=2,
+        choices=STATUS_CHOICES,
+        default='N',
+        db_index=True
+    )
 
     class Meta:
         verbose_name = 'заказ'
@@ -163,13 +177,13 @@ class OrderItem(models.Model):
         'цена',
         max_digits=8,
         decimal_places=2,
-        default = 0,
+        default=0,
         validators=[MinValueValidator(0)],
     )
 
     def __str__(self):
         return f"{self.product.name} - {self.quantity}"
-    
+
 
 class OrderItemSerializer(ModelSerializer):
 
@@ -180,9 +194,13 @@ class OrderItemSerializer(ModelSerializer):
 
 class OrderSerializer(ModelSerializer):
     products = OrderItemSerializer(many=True, allow_empty=False, )
-    total = serializers.DecimalField(max_digits=8, decimal_places=2, default=0, )
+    total = serializers.DecimalField(
+                                max_digits=8,
+                                decimal_places=2,
+                                default=0, )
+    status_display = serializers.CharField(source='get_status_display')
 
     class Meta:
         model = Order
-        fields = ['id', 'firstname', 'lastname', 'phonenumber',
-                  'address', 'products', 'total', ]
+        fields = ['id', 'status_display', 'firstname', 'lastname',
+                  'phonenumber', 'address', 'products', 'total', ]
