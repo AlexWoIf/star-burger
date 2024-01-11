@@ -93,7 +93,8 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    orders = Order.objects.prefetch_related('products').fetch_with_total()
+    orders = (Order.objects.prefetch_related('products').fetch_with_total()
+              .exclude(status='F'))
     context = {'order_items':
                [OrderSerializer(order).data for order in orders]}
     return render(request, template_name='order_items.html', context=context)
