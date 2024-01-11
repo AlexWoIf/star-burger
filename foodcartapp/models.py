@@ -141,21 +141,16 @@ class Order(models.Model):
         ('D', 'Delivering'),
         ('F', 'Finished'),
     ]
-    firstname = models.CharField('Имя', blank=True, max_length=200, )
-    lastname = models.CharField('Фамилия', blank=True, max_length=200, )
-    phonenumber = PhoneNumberField(
-                        'Телефон заказчика ',
-                        db_index=True,
-                    )
+    firstname = models.CharField('Имя', blank=True, max_length=200, default='')
+    lastname = models.CharField('Фамилия', blank=True, max_length=200,
+                                default='')
+    phonenumber = PhoneNumberField('Телефон заказчика ',
+                                   db_index=True, )
     address = models.CharField('Адрес доставки', max_length=200, )
+    status = models.CharField('статус', max_length=2, choices=STATUS_CHOICES,
+                              default='N', db_index=True, )
+    comment = models.TextField('комментарий', blank=True, default='')
     objects = OrderQuerySet.as_manager()
-    status = models.CharField(
-        'статус',
-        max_length=2,
-        choices=STATUS_CHOICES,
-        default='N',
-        db_index=True
-    )
 
     class Meta:
         verbose_name = 'заказ'
@@ -203,4 +198,4 @@ class OrderSerializer(ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'status_display', 'firstname', 'lastname',
-                  'phonenumber', 'address', 'products', 'total', ]
+                  'phonenumber', 'address', 'products', 'total', 'comment', ]
