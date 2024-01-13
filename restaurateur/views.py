@@ -8,6 +8,7 @@ from django.views import View
 
 from foodcartapp.models import (Order, ListOrderSerializer, Product,
                                 Restaurant, RestaurantSerializer)
+from foodcartapp.yandex_geo_utils import distance_between
 
 
 class Login(forms.Form):
@@ -100,12 +101,16 @@ def view_orders(request):
 
     context = {'orders': [], }
     for order in orders:
-        order_serialized = ListOrderSerializer(order).data
+        serialized_order = ListOrderSerializer(order).data
         if order.restaurant is None:
             available_restaurants = [*order.get_available_restaurant()]
-            order_serialized['restaurants'] = [
-                RestaurantSerializer(restaurant).data
-                for restaurant in available_restaurants
-            ]
-        context['orders'].append(order_serialized)
+            serialized_order['restaurants'] = []
+            for restaurant in available_restaurants:
+                serialized_restaurant = RestaurantSerializer(restaurant).data
+                serialized_restaurant['distance'] = round(
+                    distance_between(order.address, restaurant.address).km
+                )
+                serialized_order['restaurants'].append(serialized_restaurant)
+            serialized_order['restaurants'].sort(key=lambda r:r['distance'])
+        context['orders'].append(serialized_order)
     return render(request, template_name='order_list.html', context=context)
