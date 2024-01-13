@@ -1,6 +1,6 @@
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, Count
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 from rest_framework.serializers import ModelSerializer
@@ -136,11 +136,11 @@ class RestaurantMenuItem(models.Model):
 
 class Order(models.Model):
     STATUS_CHOICES = [
-        ('N', 'New'),
-        ('C', 'Check data'),
-        ('M', 'Cook and pack'),
-        ('D', 'Delivering'),
-        ('F', 'Finished'),
+        ('10_N', 'New'),
+        ('20_C', 'Check data'),
+        ('30_M', 'Cook and pack'),
+        ('40_D', 'Delivering'),
+        ('50_F', 'Finished'),
     ]
     PAYMENT_CHOICES = [
         ('D', 'Наличными при доставке'),
@@ -153,10 +153,10 @@ class Order(models.Model):
     phonenumber = PhoneNumberField('Телефон заказчика ',
                                    db_index=True, )
     address = models.CharField('Адрес доставки', max_length=200, )
-    status = models.CharField('статус', max_length=2, choices=STATUS_CHOICES,
-                              default='N', db_index=True, )
+    status = models.CharField('статус', max_length=5, choices=STATUS_CHOICES,
+                              default='10_N', db_index=True, )
     payment = models.CharField('Способ оплаты', max_length=2,
-                               choices=PAYMENT_CHOICES, blank=True,
+                               choices=PAYMENT_CHOICES, blank=True, default='',
                                db_index=True, )
     comment = models.TextField('комментарий', blank=True, default='')
     created_at = models.DateTimeField('Время создания', default=timezone.now,
@@ -165,6 +165,9 @@ class Order(models.Model):
                                      db_index=True, )
     delivered_at = models.DateTimeField('Время доставки', null=True,
                                         blank=True, db_index=True, )
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE,
+                                   related_name='orders', null=True,
+                                   verbose_name='Ресторан', blank=True, )
 
     objects = OrderQuerySet.as_manager()
 
@@ -174,6 +177,17 @@ class Order(models.Model):
 
     def __str__(self):
         return f"{self.firstname} {self.lastname} - {self.phonenumber}"
+
+    def get_available_restaurant(self):
+        order_items = self.products.all()
+        available_restaurants = Restaurant.objects.filter(
+                menu_items__product__in=[
+                    *order_items.values_list('product__pk', flat=True)
+                ]
+            ).annotate(count=Count('menu_items__product')).filter(
+                count=order_items.count()
+            )
+        return available_restaurants
 
 
 class OrderItem(models.Model):
@@ -196,6 +210,13 @@ class OrderItem(models.Model):
         return f"{self.product.name} - {self.quantity}"
 
 
+class RestaurantSerializer(ModelSerializer):
+
+    class Meta:
+        model = Restaurant
+        fields = ['id', 'name',]
+
+
 class OrderItemSerializer(ModelSerializer):
 
     class Meta:
@@ -203,17 +224,28 @@ class OrderItemSerializer(ModelSerializer):
         fields = ['product', 'quantity', 'price', ]
 
 
-class OrderSerializer(ModelSerializer):
+class RegisterOrderSerializer(ModelSerializer):
     products = OrderItemSerializer(many=True, allow_empty=False, )
-    total = serializers.DecimalField(
-                                max_digits=8,
-                                decimal_places=2,
-                                default=0, )
-    status_display = serializers.CharField(source='get_status_display')
-    payment_display = serializers.CharField(source='get_payment_display')
+    total = serializers.DecimalField(max_digits=8, decimal_places=2,
+                                     default=0, )
+
+    class Meta:
+        model = Order
+        fields = ['id', 'firstname', 'lastname',
+                  'phonenumber', 'address', 'products', 'total', 'comment', ]
+
+
+class ListOrderSerializer(ModelSerializer):
+    restaurant = RestaurantSerializer(allow_null=True)
+    total = serializers.DecimalField(max_digits=8, decimal_places=2,
+                                     default=0, )
+    status_display = serializers.CharField(source='get_status_display',
+                                           allow_blank=True, )
+    payment_display = serializers.CharField(source='get_payment_display',
+                                            allow_blank=True, )
 
     class Meta:
         model = Order
         fields = ['id', 'status_display', 'firstname', 'lastname',
-                  'phonenumber', 'address', 'products', 'total', 'comment',
-                  'payment_display', ]
+                  'phonenumber', 'address', 'total', 'comment',
+                  'payment_display', 'restaurant', ]

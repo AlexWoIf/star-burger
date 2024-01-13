@@ -1,11 +1,12 @@
+from django import forms
 from django.contrib import admin
-from django.forms import ModelForm
-from django.shortcuts import reverse, redirect
+from django.shortcuts import redirect, reverse
 from django.templatetags.static import static
 from django.utils.html import format_html
 from django.utils.http import url_has_allowed_host_and_scheme
 
-from .models import Order, OrderItem, Product, Restaurant, RestaurantMenuItem
+from .models import (Order, OrderItem, Product, ProductCategory, Restaurant,
+                     RestaurantMenuItem)
 
 
 class RestaurantMenuItemInline(admin.TabularInline):
@@ -109,11 +110,20 @@ class ProductAdmin(admin.ModelAdmin):
     get_image_list_preview.short_description = 'превью'
 
 
+class OrderAdminForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        print(self.instance.pk)
+        if self.instance.pk is not None:
+            self.fields['restaurant'].queryset = \
+                            self.instance.get_available_restaurant()
+
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ['firstname', 'lastname', 'phonenumber', 'address']
     inlines = [OrderItemInline]
-    form = ModelForm
+    form = OrderAdminForm
 
     def response_change(self, request, obj):
         response = super().response_post_save_change(request, obj)
@@ -122,3 +132,8 @@ class OrderAdmin(admin.ModelAdmin):
             return redirect(request.GET['next'])
         else:
             return response
+
+
+@admin.register(ProductCategory)
+class ProductCategoryAdmin(admin.ModelAdmin):
+    pass

@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Order, OrderItem, Product, OrderSerializer
+from .models import Order, OrderItem, Product, RegisterOrderSerializer
 
 
 def banners_list_api(request):
@@ -63,7 +63,10 @@ def product_list_api(request):
 @api_view(['POST',])
 @transaction.atomic
 def register_order(request):
-    serialized_order = OrderSerializer(data=request.data)
+    request_payload = request.data
+    request_payload['status_display'] = ''
+    request_payload['payment_display'] = ''
+    serialized_order = RegisterOrderSerializer(data=request_payload)
     serialized_order.is_valid(raise_exception=True)
 
     order = Order.objects.create(
@@ -81,7 +84,7 @@ def register_order(request):
                 ) for item in order_items]
     OrderItem.objects.bulk_create(products)
     order.total = sum([product.price for product in products])
-    serialized_order = OrderSerializer(order)
+    serialized_order = RegisterOrderSerializer(order)
     return Response({'status': 'ok',
                      'order': serialized_order.data, },
                     status=status.HTTP_201_CREATED, )

@@ -6,7 +6,8 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views import View
 
-from foodcartapp.models import Order, OrderSerializer, Product, Restaurant
+from foodcartapp.models import (Order, ListOrderSerializer, Product,
+                                Restaurant, RestaurantSerializer)
 
 
 class Login(forms.Form):
@@ -79,7 +80,7 @@ def view_products(request):
 
     return render(request, template_name="products_list.html", context={
         'products_with_restaurant_availability':
-                                        products_with_restaurant_availability,
+            products_with_restaurant_availability,
         'restaurants': restaurants,
     })
 
@@ -93,8 +94,18 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    orders = (Order.objects.prefetch_related('products').fetch_with_total()
-              .exclude(status='F'))
-    context = {'order_items':
-               [OrderSerializer(order).data for order in orders]}
-    return render(request, template_name='order_items.html', context=context)
+    orders = (Order.objects.prefetch_related('products')
+              .select_related('restaurant').fetch_with_total()
+              .exclude(status='F').order_by('status'))
+
+    context = {'orders': [], }
+    for order in orders:
+        order_serialized = ListOrderSerializer(order).data
+        if order.restaurant is None:
+            available_restaurants = [*order.get_available_restaurant()]
+            order_serialized['restaurants'] = [
+                RestaurantSerializer(restaurant).data
+                for restaurant in available_restaurants
+            ]
+        context['orders'].append(order_serialized)
+    return render(request, template_name='order_list.html', context=context)
