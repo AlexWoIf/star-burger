@@ -5,10 +5,10 @@ from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views import View
+from geopy import distance
 
-from foodcartapp.models import (Order, ListOrderSerializer, Product,
+from foodcartapp.models import (ListOrderSerializer, Order, Product,
                                 Restaurant, RestaurantSerializer)
-from foodcartapp.yandex_geo_utils import distance_between
 
 
 class Login(forms.Form):
@@ -97,20 +97,23 @@ def view_restaurants(request):
 def view_orders(request):
     orders = (Order.objects.prefetch_related('products')
               .select_related('restaurant').fetch_with_total()
-              .exclude(status='F').order_by('status'))
+              .exclude(status='F').order_by('status')
+              .fetch_with_coordinates())
 
     context = {'orders': [], }
     for order in orders:
         serialized_order = ListOrderSerializer(order).data
         if order.restaurant is None:
-            available_restaurants = [*order.get_available_restaurant()]
+            available_restaurants = [*order.get_available_restaurant()
+                                     .fetch_with_coordinates()]
             serialized_order['restaurants'] = []
             for restaurant in available_restaurants:
                 serialized_restaurant = RestaurantSerializer(restaurant).data
                 serialized_restaurant['distance'] = round(
-                    distance_between(order.address, restaurant.address).km
+                    distance.distance((order.lat, order.lon),
+                                      (restaurant.lat, restaurant.lon)).km
                 )
                 serialized_order['restaurants'].append(serialized_restaurant)
-            serialized_order['restaurants'].sort(key=lambda r:r['distance'])
+            serialized_order['restaurants'].sort(key=lambda el: el['distance'])
         context['orders'].append(serialized_order)
     return render(request, template_name='order_list.html', context=context)

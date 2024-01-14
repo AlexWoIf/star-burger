@@ -1,16 +1,38 @@
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Sum, Count
+from django.db.models import Count, Sum
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
-from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer
+
+from geopoints.models import Geopoint
 
 
 class OrderQuerySet(models.QuerySet):
     def fetch_with_total(self):
         fetch_with_total = self.annotate(total=Sum('products__price'))
         return fetch_with_total
+
+    def fetch_with_coordinates(self):
+        for order in self:
+            geopoint, _ = Geopoint.objects.get_or_create(
+                address=order.address,
+            )
+            order.lat = geopoint.lat
+            order.lon = geopoint.lon
+        return self
+
+
+class RestaurantQuerySet(models.QuerySet):
+    def fetch_with_coordinates(self):
+        for restaurant in self:
+            geopoint, _ = Geopoint.objects.get_or_create(
+                address=restaurant.address,
+            )
+            restaurant.lat = geopoint.lat
+            restaurant.lon = geopoint.lon
+        return self
 
 
 class Restaurant(models.Model):
@@ -20,7 +42,7 @@ class Restaurant(models.Model):
     )
     address = models.CharField(
         'адрес',
-        max_length=100,
+        max_length=200,
         blank=True,
     )
     contact_phone = models.CharField(
@@ -28,6 +50,8 @@ class Restaurant(models.Model):
         max_length=50,
         blank=True,
     )
+
+    objects = RestaurantQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'ресторан'
