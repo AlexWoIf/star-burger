@@ -5,8 +5,8 @@ from .yandex_geo_utils import fetch_coordinates
 
 class Geopoint(models.Model):
     address = models.CharField('Адрес', max_length=200, unique=True)
-    lon = models.FloatField('Долгота')
-    lat = models.FloatField('Широта')
+    lon = models.FloatField('Долгота', null=True, blank=True, )
+    lat = models.FloatField('Широта', null=True, blank=True, )
     updated_at = models.DateTimeField('Время обновления', default=timezone.now,
                                       db_index=True, )
 
