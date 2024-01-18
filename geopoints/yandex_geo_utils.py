@@ -16,11 +16,11 @@ def fetch_coordinates(address, apikey=settings.YANDEX_API_KEY):
         )
 
         if not found_places:
-            return None
+            return None, None
 
         most_relevant = found_places[0]
         lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
     except Exception as e:
         # TODO: сделать различную обработку для различных видов ошибок (e)
-        lon, lat = 0, 0
+        lon, lat = None, None
     return lon, lat
