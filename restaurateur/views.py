@@ -121,6 +121,8 @@ def view_orders(request):
                                           (restaurant.lat, restaurant.lon)).km
                     )
                 serialized_order['restaurants'].append(serialized_restaurant)
-            serialized_order['restaurants'].sort(key=lambda el: el['distance'])
+            serialized_order['restaurants'].sort(
+                key=lambda el: (el is None, el['distance'])
+            )
         context['orders'].append(serialized_order)
     return render(request, template_name='order_list.html', context=context)
