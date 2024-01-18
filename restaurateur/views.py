@@ -7,8 +7,8 @@ from django.urls import reverse_lazy
 from django.views import View
 from geopy import distance
 
-from foodcartapp.models import (ListOrderSerializer, Order, Product,
-                                Restaurant, RestaurantSerializer)
+from foodcartapp.models import Order, Product, Restaurant
+from foodcartapp.serializers import ListOrderSerializer, RestaurantSerializer
 
 
 MAX_POSSIBLE_DISTANCE = 21000
