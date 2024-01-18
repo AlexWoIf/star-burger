@@ -45,7 +45,12 @@
               <summary>Несколько ресторанов:</summary>
               <ul>
               {% for restaurant in order.restaurants %}
-                <li>{{ restaurant.name }}-{{ restaurant.distance }}км</li>
+                <li>
+                  {{ restaurant.name }}
+                  {% if restaurant.distance %}
+                    -{{ restaurant.distance }}км
+                  {% endif %}
+                </li>
               {% endfor %}
               </ul>
             </details>

@@ -11,9 +11,6 @@ from foodcartapp.models import Order, Product, Restaurant
 from foodcartapp.serializers import ListOrderSerializer, RestaurantSerializer
 
 
-MAX_POSSIBLE_DISTANCE = 21000
-
-
 class Login(forms.Form):
     username = forms.CharField(
         label='Логин', max_length=75, required=True,
@@ -112,9 +109,11 @@ def view_orders(request):
             serialized_order['restaurants'] = []
             for restaurant in available_restaurants:
                 serialized_restaurant = RestaurantSerializer(restaurant).data
-                if ((order.lat == 0 and order.lon == 0) or
-                   (restaurant.lat == 0 and restaurant.lon == 0)):
-                    serialized_restaurant['distance'] = MAX_POSSIBLE_DISTANCE
+                if (
+                    restaurant.lat is None or restaurant.lon is None or
+                    order.lat is None or order.lon is None
+                ):
+                    serialized_restaurant['distance'] = None
                 else:
                     serialized_restaurant['distance'] = round(
                         distance.distance((order.lat, order.lon),
@@ -122,7 +121,7 @@ def view_orders(request):
                     )
                 serialized_order['restaurants'].append(serialized_restaurant)
             serialized_order['restaurants'].sort(
-                key=lambda el: (el is None, el['distance'])
+                key=lambda el: (el['distance'] is None, el['distance'])
             )
         context['orders'].append(serialized_order)
     return render(request, template_name='order_list.html', context=context)
