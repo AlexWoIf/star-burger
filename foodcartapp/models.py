@@ -223,7 +223,7 @@ class OrderItem(models.Model):
         'цена',
         max_digits=8,
         decimal_places=2,
-        default=0,
+        blank=True,
         validators=[MinValueValidator(0)],
     )
 
