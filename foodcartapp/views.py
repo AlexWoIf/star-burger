@@ -5,8 +5,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Order, OrderItem, Product
-from .serializers import RegisterOrderSerializer
+from .models import Product
+from .serializers import OrderSerializer
 
 
 def banners_list_api(request):
@@ -65,27 +65,11 @@ def product_list_api(request):
 @transaction.atomic
 def register_order(request):
     request_payload = request.data
-    request_payload['status_display'] = ''
-    request_payload['payment_display'] = ''
-    serialized_order = RegisterOrderSerializer(data=request_payload)
-    serialized_order.is_valid(raise_exception=True)
+    order_serializer = OrderSerializer(data=request_payload)
+    order_serializer.is_valid(raise_exception=True)
 
-    order = Order.objects.create(
-        firstname=serialized_order.validated_data['firstname'],
-        lastname=serialized_order.validated_data['lastname'],
-        phonenumber=serialized_order.validated_data['phonenumber'],
-        address=serialized_order.validated_data['address']
-    )
-    order_items = serialized_order.validated_data['products']
-    products = [OrderItem(
-                    order=order,
-                    product=item['product'],
-                    quantity=item['quantity'],
-                    price=item['product'].price*item['quantity'],
-                ) for item in order_items]
-    OrderItem.objects.bulk_create(products)
-    order.total = sum([product.price for product in products])
-    serialized_order = RegisterOrderSerializer(order)
+    order = order_serializer.create(order_serializer.validated_data)
+    created_order = OrderSerializer(order)
     return Response({'status': 'ok',
-                     'order': serialized_order.data, },
+                     'order': created_order.data, },
                     status=status.HTTP_201_CREATED, )

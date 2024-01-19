@@ -12,34 +12,37 @@ class RestaurantSerializer(ModelSerializer):
 
 
 class OrderItemSerializer(ModelSerializer):
-
     class Meta:
         model = OrderItem
         fields = ['product', 'quantity', 'price', ]
 
+    def create(self, validated_data):
+        return OrderItem.objects.create(**validated_data)
 
-class RegisterOrderSerializer(ModelSerializer):
+
+class OrderSerializer(ModelSerializer):
     products = OrderItemSerializer(many=True, allow_empty=False, )
     total = serializers.DecimalField(max_digits=8, decimal_places=2,
-                                     default=0, )
-
-    class Meta:
-        model = Order
-        fields = ['id', 'firstname', 'lastname',
-                  'phonenumber', 'address', 'products', 'total', 'comment', ]
-
-
-class ListOrderSerializer(ModelSerializer):
-    restaurant = RestaurantSerializer(allow_null=True)
-    total = serializers.DecimalField(max_digits=8, decimal_places=2,
-                                     default=0, )
+                                     default=0, read_only=True, )
     status_display = serializers.CharField(source='get_status_display',
-                                           allow_blank=True, )
+                                           allow_blank=True, read_only=True, )
     payment_display = serializers.CharField(source='get_payment_display',
-                                            allow_blank=True, )
+                                            allow_blank=True, read_only=True, )
 
     class Meta:
         model = Order
-        fields = ['id', 'status_display', 'firstname', 'lastname',
-                  'phonenumber', 'address', 'total', 'comment',
+        fields = ['id', 'firstname', 'lastname', 'status_display',
+                  'phonenumber', 'address', 'products', 'total', 'comment',
                   'payment_display', 'restaurant', ]
+
+    def create(self, validated_data):
+        products = validated_data.pop('products')
+        order = Order.objects.create(**validated_data)
+        for item in products:
+            item['price'] = item['product'].price * item['quantity']
+            item['product'] = item['product'].id
+            item_serializer = OrderItemSerializer(data=item)
+            item_serializer.is_valid(raise_exception=True)
+            item_serializer.validated_data['order'] = order
+            item_serializer.create(item_serializer.validated_data)
+        return order

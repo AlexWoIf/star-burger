@@ -8,7 +8,7 @@ from django.views import View
 from geopy import distance
 
 from foodcartapp.models import Order, Product, Restaurant
-from foodcartapp.serializers import ListOrderSerializer, RestaurantSerializer
+from foodcartapp.serializers import OrderSerializer, RestaurantSerializer
 
 
 class Login(forms.Form):
@@ -106,7 +106,7 @@ def view_orders(request):
     orders.sort(key=lambda order: choices[order.status])
     context = {'orders': [], }
     for order in orders:
-        serialized_order = ListOrderSerializer(order).data
+        serialized_order = OrderSerializer(order).data
         if order.restaurant is None:
             available_restaurants = [*order.get_available_restaurant()
                                      .fetch_with_coordinates()]
