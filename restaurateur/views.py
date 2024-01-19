@@ -95,11 +95,15 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    orders = (Order.objects.prefetch_related('products')
-              .select_related('restaurant').fetch_with_total()
-              .exclude(status='F').order_by('status')
-              .fetch_with_coordinates())
-
+    orders = list(Order.objects.prefetch_related('products')
+                  .select_related('restaurant').fetch_with_total()
+                  .exclude(status='F')
+                  .fetch_with_coordinates())
+    choices = {
+        choice_id: position for position, (choice_id, _) in
+        enumerate(Order.STATUS_CHOICES)
+    }
+    orders.sort(key=lambda order: choices[order.status])
     context = {'orders': [], }
     for order in orders:
         serialized_order = ListOrderSerializer(order).data

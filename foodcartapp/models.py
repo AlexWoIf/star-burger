@@ -158,29 +158,28 @@ class RestaurantMenuItem(models.Model):
 
 class Order(models.Model):
     STATUS_CHOICES = [
-        ('10_N', 'New'),
-        ('20_C', 'Check data'),
-        ('30_M', 'Cook and pack'),
-        ('40_D', 'Delivering'),
-        ('50_F', 'Finished'),
+        ('N', 'New'),
+        ('C', 'Check data'),
+        ('M', 'Cook and pack'),
+        ('D', 'Delivering'),
+        ('F', 'Finished'),
     ]
     PAYMENT_CHOICES = [
         ('D', 'Наличными при доставке'),
         ('B', 'Накопленными бонусами/скидками'),
         ('O', 'Картой онлайн'),
     ]
-    firstname = models.CharField('Имя', blank=True, max_length=200, default='')
-    lastname = models.CharField('Фамилия', blank=True, max_length=200,
-                                default='')
+    firstname = models.CharField('Имя', blank=True, max_length=200, )
+    lastname = models.CharField('Фамилия', blank=True, max_length=200, )
     phonenumber = PhoneNumberField('Телефон заказчика ',
                                    db_index=True, )
     address = models.CharField('Адрес доставки', max_length=200, )
     status = models.CharField('статус', max_length=5, choices=STATUS_CHOICES,
-                              default='10_N', db_index=True, )
+                              default='N', db_index=True, )
     payment = models.CharField('Способ оплаты', max_length=2,
-                               choices=PAYMENT_CHOICES, blank=True, default='',
+                               choices=PAYMENT_CHOICES, blank=True,
                                db_index=True, )
-    comment = models.TextField('комментарий', blank=True, default='')
+    comment = models.TextField('комментарий', blank=True, )
     created_at = models.DateTimeField('Время создания', default=timezone.now,
                                       db_index=True, )
     called_at = models.DateTimeField('Время звонка', null=True, blank=True,
