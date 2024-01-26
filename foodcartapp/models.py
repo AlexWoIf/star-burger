@@ -218,7 +218,8 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, verbose_name='Продукт',
                                 related_name='ordered',
                                 on_delete=models.CASCADE)
-    quantity = models.IntegerField('Количество', )
+    quantity = models.IntegerField('Количество',
+                                   validators=[MinValueValidator(1)], )
     price = models.DecimalField(
         'цена',
         max_digits=8,
