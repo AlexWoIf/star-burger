@@ -36,8 +36,9 @@ class OrderSerializer(ModelSerializer):
                   'payment_display', 'restaurant', ]
 
     def create(self, validated_data):
-        products = validated_data.pop('products')
-        order = Order.objects.create(**validated_data)
+        order_data = dict(validated_data)
+        products = order_data.pop('products')
+        order = Order.objects.create(**order_data)
         for item in products:
             item['price'] = item['product'].price * item['quantity']
             item['product'] = item['product'].id

@@ -68,8 +68,7 @@ def register_order(request):
     order_serializer = OrderSerializer(data=request_payload)
     order_serializer.is_valid(raise_exception=True)
 
-    order = order_serializer.create(order_serializer.validated_data)
-    created_order = OrderSerializer(order)
+    order_serializer.create(order_serializer.validated_data)
     return Response({'status': 'ok',
-                     'order': created_order.data, },
+                     'order': order_serializer.initial_data, },
                     status=status.HTTP_201_CREATED, )
