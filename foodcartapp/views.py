@@ -65,10 +65,11 @@ def product_list_api(request):
 @transaction.atomic
 def register_order(request):
     request_payload = request.data
+    print(request.data)
     order_serializer = OrderSerializer(data=request_payload)
     order_serializer.is_valid(raise_exception=True)
-
-    order_serializer.create(order_serializer.validated_data)
+    order = order_serializer.save()
+    order_serializer.validated_data['pk'] = order.pk
     return Response({'status': 'ok',
-                     'order': order_serializer.initial_data, },
+                     'order': order_serializer.validated_data, },
                     status=status.HTTP_201_CREATED, )
