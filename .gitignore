@@ -2,6 +2,7 @@
 bundles/**
 node_modules/
 media/
+*.yaml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
