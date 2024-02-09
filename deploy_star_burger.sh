@@ -13,16 +13,16 @@ systemctl restart star_burger_django
 . .env
 curl --request POST \
      --url https://api.rollbar.com/api/1/deploy \
-     --header 'X-Rollbar-Access-Token: $ROLLBAR_TOKEN' \
-     --header 'accept: application/json' \
-     --header 'content-type: application/json' \
-     --data '
+     --header "X-Rollbar-Access-Token: $ROLLBAR_TOKEN" \
+     --header "accept: application/json" \
+     --header "content-type: application/json" \
+     --data "
 {
-  "environment": "$ROLLBAR_TOKEN",
-  "revision": "$(git rev-parse HEAD)",
-  "comment": "deploy script",
-  "local_username": "$USER"
+  \"environment\": \"$HOSTNAME\",
+  \"revision\": \"$(git rev-parse HEAD)\",
+  \"comment\": \"deploy script\",
+  \"local_username\": \"$USER\"
 }
-'
+"
 
 echo "Deploy successful!!!"
