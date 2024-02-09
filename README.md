@@ -141,12 +141,6 @@ Parcel будет следить за файлами в каталоге `bundle
 
 ## Как запустить prod-версию сайта
 
-Собрать фронтенд:
-
-```sh
-./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
-```
-
 Настроить бэкенд: создать файл `.env` в каталоге `star_burger/` со следующими настройками:
 
 - `DEBUG` — дебаг-режим. Поставьте `False`.
@@ -156,6 +150,12 @@ Parcel будет следить за файлами в каталоге `bundle
 - `YANDEX_API_KEY` - получите API ключ в [кабинете разработчика](https://developer.tech.yandex.ru/)
 - `ROLLBAR_TOKEN` - ключ для post запросов на сервер rollbar получите при регистрации либо в личном кабинете на [сайте проекта rollbar.com](https://rollbar.com/)
 - `ROLLBAR_ENV` - любое название для вашей текущей копии проекта
+
+Из папки с проектом запустить скрипт:
+
+```sh
+bash deploy_star_burger.sh
+```
 
 ## Цели проекта
 
