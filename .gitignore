@@ -2,6 +2,7 @@
 bundles/**
 node_modules/
 media/
+staticfiles/
 *.yaml
 
 # Byte-compiled / optimized / DLL files
