@@ -19,9 +19,8 @@ YANDEX_API_KEY = env('YANDEX_API_KEY')
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['127.0.0.1', 'localhost'])
 
 ROLLBAR = {
-    'access_token': env('ROLLBAR_TOKEN'),
-    'environment': env('ROLLBAR_ENV',
-                       'development' if DEBUG else 'production'),
+    'access_token': env('ROLLBAR_TOKEN', ''),
+    'environment': env('ROLLBAR_ENV', 'django_starburger'),
     'branch': 'master',
     'root': BASE_DIR,
 }
@@ -50,8 +49,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
-    'rollbar.contrib.django.middleware.RollbarNotifierMiddleware',
 ]
+if ROLLBAR['access_token'] != '':
+    MIDDLEWARE.append(
+        'rollbar.contrib.django.middleware.RollbarNotifierMiddleware',
+    )
 
 ROOT_URLCONF = 'star_burger.urls'
 
