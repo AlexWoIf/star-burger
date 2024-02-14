@@ -20,7 +20,7 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['127.0.0.1', 'localhost'])
 
 ROLLBAR = {
     'access_token': env('ROLLBAR_TOKEN', ''),
-    'environment': env('ROLLBAR_ENV', 'django_starburger'),
+    'environment': env('ROLLBAR_ENV', 'development'),
     'branch': 'master',
     'root': BASE_DIR,
 }
