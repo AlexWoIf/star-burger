@@ -14,7 +14,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 SECRET_KEY = env('SECRET_KEY')
 DEBUG = env.bool('DEBUG', False)
-YANDEX_API_KEY = env('YANDEX_API_KEY')
+YANDEX_API_KEY = env('YANDEX_API_KEY', '')
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['127.0.0.1', 'localhost'])
 
@@ -97,7 +97,7 @@ MEDIA_URL = '/media/'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=env.dj_db_url("DATABASE_URL"),
+        default=env.dj_db_url("DATABASE_URL", 'sqlite:///db.sqlite3'),
         conn_max_age=600,
         conn_health_checks=True,
     )
