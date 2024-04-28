@@ -1,7 +1,8 @@
 .*
-bundles/**
+!.gitkeep
+bundles/*
 node_modules/
-media/**
+media/*
 staticfiles/
 *.yaml
 
