@@ -1,0 +1,39 @@
+# place this file to /etc/nginx/sites-enabled/ folder
+
+server {
+    server_name star-burger.alexwolf.ru starburger.alexwolf.ru;
+
+    location /media/ {
+        alias /opt/star-burger/media/;  # replace the path with yours one
+    }
+    location /static/ {
+        alias /opt/star-burger/static/;  # replace the path with yours one
+    }
+    location / {
+        proxy_pass http://127.0.0.1:8000/;  # ! Замените адрес на свой
+    }
+
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/star-burger.alexwolf.ru/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/star-burger.alexwolf.ru/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+
+
+server {
+    if ($host = starburger.alexwolf.ru) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+    if ($host = star-burger.alexwolf.ru) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+    listen 80 default;
+    server_name star-burger.alexwolf.ru starburger.alexwolf.ru;
+    return 404; # managed by Certbot
+
+}
