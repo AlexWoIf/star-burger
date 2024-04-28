@@ -1,7 +1,5 @@
 #!/bin/bash
 
-git pull https://github.com/AlexWoIf/star-burger.git
-cd star-burger
 docker compose up -d
 mkdir -p media
 mkdir -p static
