@@ -17,7 +17,6 @@ services:
       - bundles:/usr/src/app/bundles
     entrypoint: ["python", "manage.py", "collectstatic", "--noinput"]
     depends_on:
-      - db
       - node-frontend
 
   django-backend:
