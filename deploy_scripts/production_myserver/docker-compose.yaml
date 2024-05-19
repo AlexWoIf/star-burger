@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  node-frontend:
+    build:
+      context: ../../frontend/
+    volumes:
+      - bundles:/frontend/bundles
+
+  django-collectstatic:
+    image: django/backend
+    build: 
+      context: ../../backend/
+    env_file: .env
+    volumes:
+      - static:/usr/src/app/staticfiles
+      - bundles:/usr/src/app/bundles
+    entrypoint: ["python", "manage.py", "collectstatic", "--noinput"]
+    depends_on:
+      - db
+      - node-frontend
+
+  django-backend:
+    image: django/backend
+    build: 
+      context: ../../backend/
+    restart: always
+    env_file: .env
+    ports:
+      - 8000:8000
+    volumes:
+      - media:/usr/src/app/media
+    depends_on:
+      - node-frontend
+      - django-collectstatic
+
+volumes:
+  bundles:
+  media:
+  static:
+      

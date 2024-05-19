@@ -1,0 +1,63 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:12.0-alpine
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    env_file: .env
+    ports:
+      - 5432
+
+  node-frontend:
+    build:
+      context: ../../frontend/
+    volumes:
+      - bundles:/frontend/bundles
+
+  django-collectstatic:
+    image: django/backend
+    build: 
+      context: ../../backend/
+    env_file: .env
+    volumes:
+      - static:/usr/src/app/staticfiles
+      - bundles:/usr/src/app/bundles
+    entrypoint: ["python", "manage.py", "collectstatic", "--noinput"]
+    depends_on:
+      - db
+      - node-frontend
+
+  django-backend:
+    image: django/backend
+    build: 
+      context: ../../backend/
+    restart: always
+    env_file: .env
+    ports:
+      - 8000
+    volumes:
+      - media:/usr/src/app/media
+    depends_on:
+      - db
+      - node-frontend
+      - django-collectstatic
+
+  nginx:
+    image: nginx:1-bookworm
+    ports:
+      - 8000:80
+    volumes:
+      - starburger_docker.conf:/etc/nginx/conf.d/default.conf
+      - media:/var/www/media
+      - static:/var/www/static
+    depends_on:
+      - node-frontend
+      - django-backend
+
+volumes:
+  bundles:
+  media:
+  static:
+  db_data:
+      
